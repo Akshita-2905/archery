@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Constitution Quiz Shooting Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-image: url(bac.webp);
+            background-size: cover;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #score-board {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+
+        #high-score-board {
+            position: absolute;
+            top: 20px;
+            left: 250px;
+            color: white;
+            font-size: 24px;
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+
+        #lives-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+        }
+
+        .life-emblem {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-image: url(life.webp);
+            background-size: cover;
+            margin-left: 10px;
+        }
+
+        .boards {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            gap: 50px;
+            margin-top: 100px;
+        }
+
+        .target-board {
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background-image: url(boards.jpeg);
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        .target-number {
+            position: absolute;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        .target-board:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        #question-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            z-index: 100;
+            display: none;
+        }
+
+        .question-button {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .question-button:hover {
+            background-color: #2980b9;
+        }
+
+        #muzzle-flash {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255,255,0,0.7) 0%, rgba(255,255,0,0) 70%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        #game-over-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.6);
+            z-index: 200;
+            display: none;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        #game-over-modal h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        #game-over-modal p {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        #restart-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+        }
+        #instructions-overlay {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .instructions-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 500px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .instructions-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .instructions-text {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .start-game-btn, .close-instructions-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .start-game-btn:hover {
+            background-color: #45a049;
+        }
+        #sticky-instructions {
+            position: fixed; /* Fixed position to keep it always visible at the top */
+            top: 0; /* Completely at the top */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Adjust placement to center the div */
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 3000;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        #sticky-instructions:hover {
+            background-color: #2980b9;
+        }
+        .life {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="instructions-overlay">
+        <div class="instructions-content">
+            <div class="instructions-title">Welcome to Justice Ninja!</div>
+            <div class="instructions-text">
+                <p>🎮 Game Instructions:</p>
+                <ul>
+                    <li>🏹 Shoot Targets: Click on targets to answer Constitution-based questions.</li>
+                    <li>✔️ Earn Points: Each correct answer gives you the number of points present on the board.</li>
+                    <li>❌ Wrong Answers: Incorrect answers deduct 5 points and cost 1 life.</li>
+                    <li>❤️ Lives: You start with 3 lives. Lose all lives, and the game ends!</li>
+                    <li>🎯 Quick Thinking: Be quick! Hit the targets before they disappear.</li>
+                </ul>
+                <h2>🏆 How to Win:</h2>
+                <ul>
+                    <li>📜 Answer Questions: Aim for the correct targets to score points.</li>
+                    <li>🏅 High Score: Try to beat your highest score while preserving your lives.</li>
+                    <li>🧠 Learn as You Play: Improve your knowledge of the Indian Constitution with each question!</li>
+                </ul>
+            </div>
+            <button class="start-game-btn">Start Game</button>
+            <button class="close-instructions-btn">Close</button>
+        </div>
+    </div>
+    <div id="sticky-instructions" onclick="showInstructions()">📜 Instructions</div>
+
+    <div id="game-container">
+        <div id="score-board">Score: <span id="score">0</span></div>
+        <div id="high-score-board">High Score: <span id="high-score">0</span></div>
+        
+        <div id="lives-container">
+            <div id="life-1" class="life-emblem"></div>
+            <div id="life-2" class="life-emblem"></div>
+            <div id="life-3" class="life-emblem"></div>
+        </div>
+        
+        <div class="boards">
+            <div id="target-board-1" class="target-board" data-number="0"></div>
+            <div id="target-board-2" class="target-board" data-number="0"></div>
+            <div id="target-board-3" class="target-board" data-number="0"></div>
+        </div>
+        
+        <div id="question-modal">
+            <h2 id="question-text"></h2>
+            <div id="options-container"></div>
+        </div>
+
+        <div id="game-over-modal">
+            <h2>Game Over</h2>
+            <p>Your Final Score: <span id="final-score"></span></p>
+            <p>High Score: <span id="modal-high-score"></span></p>
+            <button id="restart-button">Restart Game</button>
+        </div>
+
+        <div id="muzzle-flash"></div>
+    </div>
+
+    <!-- Sound Effects -->
+    <audio id="background-music" loop>
+        <source src="background-music.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="shoot-sound">
+        <source src="target-click.wav" type="audio/mpeg">
+    </audio>
+    <audio id="correct-sound">
+        <source src="correct-answer.wav" type="audio/mpeg">
+    </audio>
+    <audio id="wrong-sound">
+        <source src="wrong-answer.wav" type="audio/mpeg">
+    </audio>
+    <audio id="game-over-sound">
+        <source src="wrong-answer.wav" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // Play background music
+        const backgroundMusic = document.getElementById('background-music');
+        backgroundMusic.volume = 0.5;
+        backgroundMusic.play();
+
+        function showInstructions() {
+            const instructionsOverlay = document.getElementById('instructions-overlay');
+            instructionsOverlay.style.display = 'flex'; // Show the instructions overlay
+        }
+
+        const startGameBtn = document.querySelector('.start-game-btn');
+        startGameBtn.addEventListener('click', () => {
+            const instructionsOverlay = document.getElementById('instructions-overlay');
+            instructionsOverlay.style.display = 'none';
+        });
+
+        // Add event listener for the Close button
+        const closeInstructionsBtn = document.querySelector('.close-instructions-btn');
+        closeInstructionsBtn.addEventListener('click', () => {
+            const instructionsOverlay = document.getElementById('instructions-overlay');
+            instructionsOverlay.style.display = 'none';
+        });
+
+        // Constitution Questions
+        const constitutionQuestions = [
+            {
+                question: "Who is the Father of the Indian Constitution?",
+                options: ["B.R. Ambedkar", "Jawaharlal Nehru", "Mahatma Gandhi", "Sardar Patel"],
+                correctAnswer: "B.R. Ambedkar"
+            },
+            {
+                question: "When was the Constitution of India adopted?",
+                options: ["26 January 1950", "15 August 1947", "26 November 1949", "2 October 1948"],
+                correctAnswer: "26 November 1949"
+            },
+            {
+                question: "How many fundamental rights are in the Indian Constitution?",
+                options: ["5", "6", "7", "8"],
+                correctAnswer: "7"
+            },
+            {
+                question: "Who was the first President of India?",
+                options: ["Rajendra Prasad", "Sarvepalli Radhakrishnan", "Zakir Husain", "V.V. Giri"],
+                correctAnswer: "Rajendra Prasad"
+            },
+            {
+                question: "What is the minimum voting age in India?",
+                options: ["16 years", "18 years", "21 years", "25 years"],
+                correctAnswer: "18 years"
+            }
+        ];
+
+        let score = 0;
+        let highScore = 0;
+        let currentQuestion = null;
+        let lives = 3;
+        let questionSource = null;
+
+        // Load high score from local storage
+        if (localStorage.getItem('constitutionQuizHighScore')) {
+            highScore = parseInt(localStorage.getItem('constitutionQuizHighScore'));
+            document.getElementById('high-score').textContent = highScore;
+        }
+function resetGameState() {
+    totalArr = 10; // Reset arrows
+    arrows = 0;    // Reset arrows used
+    totalScore = 0; // Keep the score from where left
+    moveArrowCheck = false; 
+    boardMove = false;
+    board.y = window.innerHeight / 2; // Reset board to center
+}
+
+        // Show Question Modal
+        function showQuestion(source) {
+            const questionModal = document.getElementById('question-modal');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+
+            // Disable other boards while the question is active
+            disableBoards();
+
+            // Track which element triggered the question
+            questionSource = source;
+
+            // Select random question
+            currentQuestion = constitutionQuestions[Math.floor(Math.random() * constitutionQuestions.length)];
+
+            // Set question text
+            questionText.textContent = currentQuestion.question;
+
+            // Clear previous options
+            optionsContainer.innerHTML = '';
+
+            // Create option buttons
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('question-button');
+                button.onclick = () => checkAnswer(option);
+                optionsContainer.appendChild(button);
+            });
+
+            // Show modal
+            questionModal.style.display = 'block';
+        }
+
+        function generateRandomNumbers() {
+            const targetBoards = document.querySelectorAll('.target-board');
+            targetBoards.forEach(board => {
+                const randomNumber = Math.floor(Math.random() * 50) + 1; // Generate random number from 1 to 50
+                board.setAttribute('data-number', randomNumber); // Set number as data attribute
+
+                // Add the number as visible text on the board
+                let numberOverlay = board.querySelector('.target-number');
+                if (!numberOverlay) {
+                    numberOverlay = document.createElement('div');
+                    numberOverlay.classList.add('target-number');
+                    board.appendChild(numberOverlay);
+                }
+                numberOverlay.textContent = randomNumber;
+            });
+        }
+
+        // Check Answer
+        function checkAnswer(selectedOption) {
+            const questionModal = document.getElementById('question-modal');
+            const scoreElement = document.getElementById('score');
+
+            if (selectedOption === currentQuestion.correctAnswer) {
+                const shootSound = document.getElementById('shoot-sound');
+                shootSound.currentTime = 0; // Reset sound to allow immediate replay
+                shootSound.play();
+
+                // Retrieve random number from the clicked board
+                const boardNumber = parseInt(questionSource.getAttribute('data-number'));
+
+                // Add the board's random number to the score
+                score += boardNumber;
+                document.getElementById('score').textContent = score;
+
+                // Update high score if necessary
+                if (score > highScore) {
+                    highScore = score;
+                    document.getElementById('high-score').textContent = highScore;
+                    localStorage.setItem('constitutionQuizHighScore', highScore); // Save high score to local storage
+                }
+
+                const correctSound = document.getElementById('correct-sound');
+                correctSound.currentTime = 0; // Reset sound to allow immediate replay
+                correctSound.play();
+                alert(`Correct! You earned ${boardNumber} points.`);
+            } else {
+                const wrongSound = document.getElementById('wrong-sound');
+                wrongSound.currentTime = 0; // Reset sound to allow immediate replay
+                wrongSound.play();
+
+                // Handle wrong answer
+                score = Math.max(0, score - 5); // Deduct points for wrong answer
+                document.getElementById('score').textContent = score;
+
+                // Remove a life
+                lives--;
+                document.getElementById(`life-${lives + 1}`).style.display = 'none';
+
+                // Check for game over
+                if (lives === 0) {
+                    endGame();
+                    return;
+                }
+
+                alert('Wrong answer! Try again.');
+            }
+
+            // Hide the question modal and re-enable boards
+            questionModal.style.display = 'none';
+            enableBoards();
+
+            // Generate new random numbers for boards after each question
+            generateRandomNumbers();
+        }
+
+        // Call generateRandomNumbers when the game starts or is restarted
+        document.addEventListener('DOMContentLoaded', () => {
+            generateRandomNumbers(); // Initialize random numbers for the first time
+        });
+
+        // End Game
+        function endGame() {
+            const gameOverModal = document.getElementById('game-over-modal');
+            const finalScoreElement = document.getElementById('final-score');
+            const modalHighScoreElement = document.getElementById('modal-high-score');
+            const restartButton = document.getElementById('restart-button');
+
+            // Set final score
+            finalScoreElement.textContent = score;
+            
+            // Set high score
+            modalHighScoreElement.textContent = highScore;
+
+            const gameOverSound = document.getElementById('game-over-sound');
+            gameOverSound.currentTime = 0; // Reset sound to allow immediate replay
+            gameOverSound.play();
+
+            gameOverModal.style.display = 'block';
+
+            restartButton.onclick = restartGame;
+        }
+
+        // Restart Game
+        function restartGame() {
+            // Reset game states
+            score = 0;
+            document.getElementById('score').textContent = '0';
+
+            lives = 3;
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`life-${i}`).style.display = 'block';
+            }
+
+            document.getElementById('game-over-modal').style.display = 'none';
+            enableBoards();
+
+            // Reset random numbers
+            generateRandomNumbers();
+
+            // Clear and hide the question modal
+            const questionModal = document.getElementById('question-modal');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+
+            questionText.textContent = ''; // Clear question text
+            optionsContainer.innerHTML = ''; // Clear all options
+            questionModal.style.display = 'none'; // Hide the question modal completely
+
+            // Reset question state
+            currentQuestion = null;
+            questionSource = null;
+
+            // Re-enable the boards
+            enableBoards();
+
+            // Re-initialize game logic
+            console.log('Game restarted completely');
+            
+            // Call any initialization logic (if necessary)
+            startNewQuestion(); // Ensure the first question is asked after restarting
+        }
+
+        function startNewQuestion() {
+            // Reset the question modal (if needed)
+            const questionModal = document.getElementById('question-modal');
+            questionModal.style.display = 'none';
+
+            // Enable boards to allow interaction
+            enableBoards();
+
+            // Log to indicate that a new question can be selected
+            console.log('A new question can now be selected.');
+        }
+
+        // Add event listeners to target boards
+        const targetBoards = document.querySelectorAll('.target-board');
+        targetBoards.forEach(target => {
+            target.addEventListener('click', () => showQuestion(target));
+        });
+
+        // Disable all boards (temporarily)
+        function disableBoards() {
+            const targetBoards = document.querySelectorAll('.target-board');
+            targetBoards.forEach(board => {
+                board.style.pointerEvents = 'none'; // Disable clicks
+                board.style.opacity = '0.5'; // Optional: visually indicate that boards are disabled
+            });
+        }
+
+        // Enable all boards
+        function enableBoards() {
+            const targetBoards = document.querySelectorAll('.target-board');
+            targetBoards.forEach(board => {
+                board.style.pointerEvents = 'auto'; // Enable clicks
+                board.style.opacity = '1'; // Restore original appearance
+            });
+        }
+        
+        // Optional: Double click to mute/unmute background music
+        let isMusicPlaying = true;
+        document.getElementById('sticky-instructions').addEventListener('dblclick', () => {
+            if (isMusicPlaying) {
+                backgroundMusic.pause();
+                isMusicPlaying = false;
+            } else {
+                backgroundMusic.play();
+                isMusicPlaying = true;
+            }
+        });
+
+    </script>
+</body>
+</html>
